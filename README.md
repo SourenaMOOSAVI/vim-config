@@ -33,12 +33,12 @@ This repository contains a custom `.vimrc` configuration for Vim, designed to en
 
 1. **Clone the Repository**
    ```bash
-   git clone https://github.com/yourusername/dotfiles.git ~/dotfiles
+   git clone https://github.com/SourenaMOOSAVI/vim-config.git
    ```
 
 2. **Link the `.vimrc` File**
    ```bash
-   ln -s ~/dotfiles/.vimrc ~/.vimrc
+   ln -s ~/vim-config/.vimrc ~/.vimrc
    ```
 
 3. **Install vim-plug (Plugin Manager)**
