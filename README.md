@@ -145,4 +145,4 @@ Feel free to fork this repository, make changes, and submit pull requests. Sugge
 
 ## License
 
-This configuration is released under the [MIT License](LICENSE).
+This configuration is released under the [GNU GENERAL PUBLIC LICENSE](LICENSE).
