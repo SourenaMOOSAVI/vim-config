@@ -1,6 +1,6 @@
 # Vim Configuration
 
-This repository contains my personal `.vimrc` configuration for Vim, designed to enhance productivity with modern plugins, intuitive key mappings, and a clean, efficient setup. It supports general programming with a focus on Python and C++ development, featuring LSP integration, syntax highlighting, and a sleek interface.
+This repository contains a custom `.vimrc` configuration for Vim, designed to enhance productivity with modern plugins, intuitive key mappings, and a clean, efficient setup. It supports general programming with a focus on Python and C++ development, featuring LSP integration, syntax highlighting, and a sleek interface.
 
 ## Features
 
