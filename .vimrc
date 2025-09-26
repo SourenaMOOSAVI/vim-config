@@ -16,10 +16,16 @@ set noswapfile                         " Disable swap files
 set undofile undodir=~/.vim/undodir    " Persistent undo
 set signcolumn=yes                     " Always show sign column
 set splitbelow splitright              " Natural split behavior
+set lazyredraw                         " Don't redraw during macros
+set ttyfast                            " Fast terminal connection
+set redrawtime=10000                   " Increase redraw timeout
 
-" Workaround for phantom characters issue
+" Fix phantom characters issue
+set t_RV=                              " Disable terminal version check
 if has('nvim') || has('termguicolors')
   autocmd VimEnter * highlight CursorLine cterm=NONE ctermbg=NONE guibg=NONE
+  " Additional fix for phantom characters
+  autocmd VimEnter * set t_Co=256
 endif
 
 " Create undo directory if it doesn't exist
@@ -47,16 +53,24 @@ Plug 'editorconfig/editorconfig-vim'                     " EditorConfig support
 Plug 'morhetz/gruvbox'                                    " Modern colorscheme
 Plug 'ryanoasis/vim-devicons'                             " File icons
 
-" Language-Specific
-Plug 'dense-analysis/ale', {'for': ['python', 'cpp']}     " Linting
+" Better formatting (replace ALE for formatting)
+Plug 'google/vim-maktaba'                                 " Required for codefmt
+Plug 'google/vim-codefmt'                                 " Better code formatting
+Plug 'google/vim-glaive'                                  " Configure codefmt
 
 call plug#end()
+
+" Configure vim-glaive (must be after plug#end())
+call glaive#Install()
 
 " === Leader Key ===
 let mapleader = "\<Space>"  " Use space as leader key
 
 " === CoC.nvim Configuration ===
 let g:coc_global_extensions = ['coc-clangd', 'coc-pyright', 'coc-json', 'coc-snippets']
+
+" Disable CoC formatting to avoid conflicts
+let g:coc_format_on_save_ignore = ['cpp', 'c', 'python']
 
 " Autocomplete with <TAB>
 inoremap <silent><expr> <TAB>
@@ -80,7 +94,6 @@ nmap <silent> gi <Plug>(coc-implementation)
 nmap <silent> gr <Plug>(coc-references)
 nmap <leader>rn <Plug>(coc-rename)
 nmap <leader>ca <Plug>(coc-codeaction-selected)w
-nnoremap <leader>f :call CocActionAsync('format')<CR>
 
 " Diagnostics Navigation
 nmap <silent> [g <Plug>(coc-diagnostic-prev)
@@ -106,21 +119,24 @@ let g:airline_powerline_fonts = 1
 let g:airline#extensions#tabline#enabled = 1
 let g:airline#extensions#tabline#formatter = 'unique_tail'
 
-" === ALE Configuration ===
-let g:ale_linters = {
-  \ 'python': ['flake8', 'pylint'],
-  \ 'cpp': ['clangtidy']
-  \}
-let g:ale_fixers = {
-  \ 'python': ['black', 'isort'],
-  \ 'cpp': ['clang-format']
-  \}
-let g:ale_fix_on_save = 1
-let g:ale_sign_error = '✘'
-let g:ale_sign_warning = '⚠'
+" === Code Formatting Configuration ===
+" Configure vim-codefmt
+Glaive codefmt plugin[mappings]
+Glaive codefmt google_java_executable="java -jar /path/to/google-java-format-all-deps.jar"
 
-" Ensure proper block formatting for C++
-let g:ale_cpp_clangformat_options = '-style={BasedOnStyle: Google, IndentWidth: 2}'
+" C++ formatting with clang-format
+augroup autoformat_settings
+  autocmd!
+  autocmd FileType c,cpp,proto,javascript,typescript AutoFormatBuffer clang-format
+  autocmd FileType python AutoFormatBuffer autopep8
+augroup END
+
+" Custom C++ formatting settings
+let g:clang_format_fallback_style = 'Google'
+
+" Manual formatting keybindings
+nnoremap <leader>f :FormatCode<CR>
+vnoremap <leader>f :FormatLines<CR>
 
 " === Key Mappings ===
 " Commenting
@@ -145,11 +161,37 @@ nnoremap <C-l> <C-w>l
 colorscheme gruvbox
 set background=dark
 
-" === Python & C++ Specific ===
+" === Python & C++ Specific Settings ===
 augroup filetype_settings
   autocmd!
-  autocmd FileType python setlocal tabstop=4 shiftwidth=4
-  autocmd FileType cpp setlocal tabstop=2 shiftwidth=2
+  autocmd FileType python setlocal tabstop=4 shiftwidth=4 expandtab
+  autocmd FileType cpp,c setlocal tabstop=2 shiftwidth=2 expandtab
+  autocmd FileType cpp,c setlocal cindent
+  autocmd FileType cpp,c setlocal cinoptions=:0,l1,t0,g0,(0
+  " Ensure proper brace formatting
+  autocmd FileType cpp,c setlocal formatoptions+=croql
+augroup END
+
+" === C++ Specific Formatting Rules ===
+" Custom function for proper C++ brace formatting
+function! FixCppBraces()
+  " Fix opening braces
+  silent! %s/\s*{\s*$/\r{/g
+  " Fix closing braces
+  silent! %s/}\s*$/\r}/g
+  " Clean up extra newlines
+  silent! %s/\n\n\+/\r\r/g
+endfunction
+
+" Command to fix C++ formatting
+command! FixCppFormat call FixCppBraces()
+
+" === Auto-format on save (optional - can be disabled) ===
+augroup format_on_save
+  autocmd!
+  " Uncomment the next lines if you want auto-format on save
+  " autocmd BufWritePre *.cpp,*.c,*.h FormatCode
+  " autocmd BufWritePre *.py FormatCode
 augroup END
 
 " === Final Settings ===
@@ -159,4 +201,22 @@ syntax enable
 " Auto-install plugins on first run
 if empty(glob('~/.vim/plugged'))
   autocmd VimEnter * PlugInstall --sync | source $MYVIMRC
+endif
+
+" === Additional phantom character fixes ===
+" Clear screen artifacts
+nnoremap <leader>r :redraw!<CR>
+
+" Fix terminal quirks
+if !has('nvim')
+  set ttymouse=xterm2
+endif
+
+" Prevent cursor shape issues
+if exists('$TMUX')
+  let &t_SI = "\<Esc>Ptmux;\<Esc>\e[5 q\<Esc>\\"
+  let &t_EI = "\<Esc>Ptmux;\<Esc>\e[2 q\<Esc>\\"
+else
+  let &t_SI = "\e[5 q"
+  let &t_EI = "\e[2 q"
 endif
