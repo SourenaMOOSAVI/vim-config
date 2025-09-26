@@ -60,9 +60,6 @@ Plug 'google/vim-glaive'                                  " Configure codefmt
 
 call plug#end()
 
-" Configure vim-glaive (must be after plug#end())
-call glaive#Install()
-
 " === Leader Key ===
 let mapleader = "\<Space>"  " Use space as leader key
 
@@ -120,23 +117,52 @@ let g:airline#extensions#tabline#enabled = 1
 let g:airline#extensions#tabline#formatter = 'unique_tail'
 
 " === Code Formatting Configuration ===
-" Configure vim-codefmt
-Glaive codefmt plugin[mappings]
-Glaive codefmt google_java_executable="java -jar /path/to/google-java-format-all-deps.jar"
-
-" C++ formatting with clang-format
-augroup autoformat_settings
+" Configure vim-codefmt (only if plugins are loaded)
+augroup codefmt_config
   autocmd!
-  autocmd FileType c,cpp,proto,javascript,typescript AutoFormatBuffer clang-format
-  autocmd FileType python AutoFormatBuffer autopep8
+  autocmd VimEnter * call SetupCodefmt()
 augroup END
+
+function! SetupCodefmt()
+  " Only configure if glaive is available
+  if exists('*glaive#Install')
+    call glaive#Install()
+    Glaive codefmt plugin[mappings]
+    
+    " C++ formatting with clang-format
+    augroup autoformat_settings
+      autocmd!
+      autocmd FileType c,cpp,proto,javascript,typescript AutoFormatBuffer clang-format
+      autocmd FileType python AutoFormatBuffer autopep8
+    augroup END
+  endif
+endfunction
 
 " Custom C++ formatting settings
 let g:clang_format_fallback_style = 'Google'
 
-" Manual formatting keybindings
-nnoremap <leader>f :FormatCode<CR>
-vnoremap <leader>f :FormatLines<CR>
+" Manual formatting keybindings (work with or without codefmt)
+nnoremap <leader>f :call SmartFormat()<CR>
+vnoremap <leader>f :call SmartFormatRange()<CR>
+
+" Smart formatting function
+function! SmartFormat()
+  if exists(':FormatCode')
+    FormatCode
+  else
+    " Fallback to basic formatting
+    normal! gg=G
+  endif
+endfunction
+
+function! SmartFormatRange() range
+  if exists(':FormatLines')
+    FormatLines
+  else
+    " Fallback to basic formatting
+    normal! gv=
+  endif
+endfunction
 
 " === Key Mappings ===
 " Commenting
