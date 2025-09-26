@@ -17,6 +17,11 @@ set undofile undodir=~/.vim/undodir    " Persistent undo
 set signcolumn=yes                     " Always show sign column
 set splitbelow splitright              " Natural split behavior
 
+" Workaround for phantom characters issue
+if has('nvim') || has('termguicolors')
+  autocmd VimEnter * highlight CursorLine cterm=NONE ctermbg=NONE guibg=NONE
+endif
+
 " Create undo directory if it doesn't exist
 if !isdirectory(expand('~/.vim/undodir'))
   call mkdir(expand('~/.vim/undodir'), 'p')
@@ -36,7 +41,7 @@ Plug 'vim-airline/vim-airline-themes'                     " Statusline themes
 Plug 'tpope/vim-fugitive'                                 " Git integration
 Plug 'tpope/vim-commentary'                               " Commenting
 Plug 'jiangmiao/auto-pairs'                               " Auto-close brackets
-Plug 'editorconfig/editorconfig-vim'                       " EditorConfig support
+Plug 'editorconfig/editorconfig-vim'                     " EditorConfig support
 
 " Visual Enhancements
 Plug 'morhetz/gruvbox'                                    " Modern colorscheme
@@ -113,6 +118,9 @@ let g:ale_fixers = {
 let g:ale_fix_on_save = 1
 let g:ale_sign_error = '✘'
 let g:ale_sign_warning = '⚠'
+
+" Ensure proper block formatting for C++
+let g:ale_cpp_clangformat_options = '-style={BasedOnStyle: Google, IndentWidth: 2}'
 
 " === Key Mappings ===
 " Commenting
