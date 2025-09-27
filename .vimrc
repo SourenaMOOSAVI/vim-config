@@ -11,6 +11,7 @@ set timeoutlen=500                     " Shorter key sequence timeout
 set termguicolors                      " Enable true colors
 set cursorline                         " Highlight current line
 set scrolloff=8                        " Keep lines above/below cursor
+set sidescrolloff=8                    " Keep columns left/right of cursor
 set incsearch hlsearch ignorecase smartcase  " Better search
 set noswapfile                         " Disable swap files
 set undofile undodir=~/.vim/undodir    " Persistent undo
@@ -19,12 +20,18 @@ set splitbelow splitright              " Natural split behavior
 set lazyredraw                         " Don't redraw during macros
 set ttyfast                            " Fast terminal connection
 set redrawtime=10000                   " Increase redraw timeout
+set wildmenu wildmode=longest:full,full " Better command completion
+set completeopt=menuone,noinsert,noselect " Better completion experience
+set pumheight=10                       " Limit popup menu height
+
+" Performance improvements
+set synmaxcol=300                      " Don't highlight very long lines
+set re=1                               " Use old regex engine (sometimes faster)
 
 " Fix phantom characters issue
 set t_RV=                              " Disable terminal version check
 if has('nvim') || has('termguicolors')
   autocmd VimEnter * highlight CursorLine cterm=NONE ctermbg=NONE guibg=NONE
-  " Additional fix for phantom characters
   autocmd VimEnter * set t_Co=256
 endif
 
@@ -40,31 +47,49 @@ call plug#begin('~/.vim/plugged')
 Plug 'neoclide/coc.nvim', {'branch': 'release'}            " LSP and autocompletion
 Plug 'sheerun/vim-polyglot'                               " Syntax highlighting
 Plug 'preservim/nerdtree', {'on': 'NERDTreeToggle'}       " File explorer
+Plug 'Xuyuanp/nerdtree-git-plugin', {'on': 'NERDTreeToggle'} " Git status in NERDTree
 Plug 'junegunn/fzf', {'do': { -> fzf#install() }}         " Fuzzy finder
 Plug 'junegunn/fzf.vim'                                   " FZF integration
 Plug 'vim-airline/vim-airline'                            " Statusline
 Plug 'vim-airline/vim-airline-themes'                     " Statusline themes
 Plug 'tpope/vim-fugitive'                                 " Git integration
+Plug 'airblade/vim-gitgutter'                            " Git diff in gutter
 Plug 'tpope/vim-commentary'                               " Commenting
+Plug 'tpope/vim-surround'                                 " Surround text objects
+Plug 'tpope/vim-repeat'                                   " Repeat plugin commands
 Plug 'jiangmiao/auto-pairs'                               " Auto-close brackets
 Plug 'editorconfig/editorconfig-vim'                     " EditorConfig support
 
 " Visual Enhancements
 Plug 'morhetz/gruvbox'                                    " Modern colorscheme
 Plug 'ryanoasis/vim-devicons'                             " File icons
+Plug 'Yggdroot/indentLine'                               " Show indentation levels
 
-" Better formatting (replace ALE for formatting)
+" Better formatting
 Plug 'google/vim-maktaba'                                 " Required for codefmt
 Plug 'google/vim-codefmt'                                 " Better code formatting
 Plug 'google/vim-glaive'                                  " Configure codefmt
+
+" Additional useful plugins
+Plug 'mbbill/undotree', {'on': 'UndotreeToggle'}         " Visualize undo tree
+Plug 'machakann/vim-highlightedyank'                     " Highlight yanked text
+Plug 'justinmk/vim-sneak'                                " Better f/F navigation
 
 call plug#end()
 
 " === Leader Key ===
 let mapleader = "\<Space>"  " Use space as leader key
+let maplocalleader = ","    " Use comma as local leader
 
 " === CoC.nvim Configuration ===
-let g:coc_global_extensions = ['coc-clangd', 'coc-pyright', 'coc-json', 'coc-snippets']
+let g:coc_global_extensions = [
+  \ 'coc-clangd', 
+  \ 'coc-pyright', 
+  \ 'coc-json', 
+  \ 'coc-snippets',
+  \ 'coc-pairs',
+  \ 'coc-git'
+\ ]
 
 " Disable CoC formatting to avoid conflicts
 let g:coc_format_on_save_ignore = ['cpp', 'c', 'python']
@@ -83,6 +108,13 @@ function! CheckBackspace() abort
   return !col || getline('.')[col - 1] =~# '\s'
 endfunction
 
+" Use <c-space> to trigger completion
+if has('nvim')
+  inoremap <silent><expr> <c-space> coc#refresh()
+else
+  inoremap <silent><expr> <c-@> coc#refresh()
+endif
+
 " LSP Mappings
 nnoremap <silent> K :call CocActionAsync('doHover')<CR>
 nmap <silent> gd <Plug>(coc-definition)
@@ -90,7 +122,9 @@ nmap <silent> gy <Plug>(coc-type-definition)
 nmap <silent> gi <Plug>(coc-implementation)
 nmap <silent> gr <Plug>(coc-references)
 nmap <leader>rn <Plug>(coc-rename)
-nmap <leader>ca <Plug>(coc-codeaction-selected)w
+nmap <leader>ca <Plug>(coc-codeaction-selected)
+xmap <leader>ca <Plug>(coc-codeaction-selected)
+nmap <leader>qf <Plug>(coc-fix-current)
 
 " Diagnostics Navigation
 nmap <silent> [g <Plug>(coc-diagnostic-prev)
@@ -102,34 +136,89 @@ nnoremap <silent> <leader>d :CocList diagnostics<CR>
 " === NERDTree Configuration ===
 let NERDTreeShowHidden = 1
 let NERDTreeQuitOnOpen = 1
+let NERDTreeMinimalUI = 1
+let NERDTreeDirArrows = 1
+let NERDTreeAutoDeleteBuffer = 1
 nnoremap <C-n> :NERDTreeToggle<CR>
+nnoremap <leader>nf :NERDTreeFind<CR>
+
+" Close vim if only NERDTree is left
+autocmd BufEnter * if tabpagenr('$') == 1 && winnr('$') == 1 && exists('b:NERDTree') && b:NERDTree.isTabTree() | quit | endif
 
 " === FZF Configuration ===
 nnoremap <C-p> :Files<CR>
 nnoremap <leader>b :Buffers<CR>
 nnoremap <leader>rg :Rg<CR>
+nnoremap <leader>l :BLines<CR>
+nnoremap <leader>h :History<CR>
+nnoremap <leader>: :Commands<CR>
 let g:fzf_layout = { 'window': { 'width': 0.9, 'height': 0.6 } }
+
+" Customize fzf colors to match your color scheme
+let g:fzf_colors = {
+  \ 'fg':      ['fg', 'Normal'],
+  \ 'bg':      ['bg', 'Normal'],
+  \ 'hl':      ['fg', 'Comment'],
+  \ 'fg+':     ['fg', 'CursorLine', 'CursorColumn', 'Normal'],
+  \ 'bg+':     ['bg', 'CursorLine', 'CursorColumn'],
+  \ 'hl+':     ['fg', 'Statement'],
+  \ 'info':    ['fg', 'PreProc'],
+  \ 'border':  ['fg', 'Ignore'],
+  \ 'prompt':  ['fg', 'Conditional'],
+  \ 'pointer': ['fg', 'Exception'],
+  \ 'marker':  ['fg', 'Keyword'],
+  \ 'spinner': ['fg', 'Label'],
+  \ 'header':  ['fg', 'Comment']
+\ }
 
 " === Airline Configuration ===
 let g:airline_theme = 'gruvbox'
 let g:airline_powerline_fonts = 1
 let g:airline#extensions#tabline#enabled = 1
 let g:airline#extensions#tabline#formatter = 'unique_tail'
+let g:airline#extensions#tabline#show_buffers = 1
+let g:airline#extensions#tabline#show_tabs = 1
+let g:airline#extensions#coc#enabled = 1
+let g:airline#extensions#branch#enabled = 1
+
+" === IndentLine Configuration ===
+let g:indentLine_char = '│'
+let g:indentLine_first_char = '│'
+let g:indentLine_showFirstIndentLevel = 1
+let g:indentLine_setColors = 0
+
+" === Git Configuration ===
+let g:gitgutter_enabled = 1
+let g:gitgutter_map_keys = 0
+let g:gitgutter_override_sign_column_highlight = 1
+let g:gitgutter_preview_win_floating = 1
+
+" Git mappings
+nmap <leader>gp <Plug>(GitGutterPreviewHunk)
+nmap <leader>gs <Plug>(GitGutterStageHunk)
+nmap <leader>gu <Plug>(GitGutterUndoHunk)
+nmap [c <Plug>(GitGutterPrevHunk)
+nmap ]c <Plug>(GitGutterNextHunk)
+
+" === UndoTree Configuration ===
+nnoremap <leader>u :UndotreeToggle<CR>
+let g:undotree_SetFocusWhenToggle = 1
+
+" === Sneak Configuration ===
+let g:sneak#label = 1
+let g:sneak#use_ic_scs = 1
 
 " === Code Formatting Configuration ===
-" Configure vim-codefmt (only if plugins are loaded)
 augroup codefmt_config
   autocmd!
   autocmd VimEnter * call SetupCodefmt()
 augroup END
 
 function! SetupCodefmt()
-  " Only configure if glaive is available
   if exists('*glaive#Install')
     call glaive#Install()
     Glaive codefmt plugin[mappings]
     
-    " C++ formatting with clang-format
     augroup autoformat_settings
       autocmd!
       autocmd FileType c,cpp,proto,javascript,typescript AutoFormatBuffer clang-format
@@ -138,19 +227,16 @@ function! SetupCodefmt()
   endif
 endfunction
 
-" Custom C++ formatting settings
 let g:clang_format_fallback_style = 'Google'
 
-" Manual formatting keybindings (work with or without codefmt)
+" Manual formatting keybindings
 nnoremap <leader>f :call SmartFormat()<CR>
 vnoremap <leader>f :call SmartFormatRange()<CR>
 
-" Smart formatting function
 function! SmartFormat()
   if exists(':FormatCode')
     FormatCode
   else
-    " Fallback to basic formatting
     normal! gg=G
   endif
 endfunction
@@ -159,7 +245,6 @@ function! SmartFormatRange() range
   if exists(':FormatLines')
     FormatLines
   else
-    " Fallback to basic formatting
     normal! gv=
   endif
 endfunction
@@ -170,12 +255,17 @@ nmap <leader>/ gcc
 vmap <leader>/ gc
 
 " Clear search highlight
-nnoremap <leader>h :nohlsearch<CR>
+nnoremap <leader><CR> :nohlsearch<CR>
+
+" Better escape
+inoremap jk <Esc>
+inoremap kj <Esc>
 
 " Buffer navigation
 nnoremap <leader>bn :bnext<CR>
 nnoremap <leader>bp :bprevious<CR>
 nnoremap <leader>bd :bdelete<CR>
+nnoremap <leader>bD :bdelete!<CR>
 
 " Window navigation
 nnoremap <C-h> <C-w>h
@@ -183,9 +273,45 @@ nnoremap <C-j> <C-w>j
 nnoremap <C-k> <C-w>k
 nnoremap <C-l> <C-w>l
 
+" Window resizing
+nnoremap <C-Left> :vertical resize -5<CR>
+nnoremap <C-Right> :vertical resize +5<CR>
+nnoremap <C-Up> :resize +5<CR>
+nnoremap <C-Down> :resize -5<CR>
+
+" Better movement
+nnoremap j gj
+nnoremap k gk
+nnoremap gj j
+nnoremap gk k
+
+" Center screen on search
+nnoremap n nzzzv
+nnoremap N Nzzzv
+
+" Keep visual selection when indenting
+vnoremap < <gv
+vnoremap > >gv
+
+" Move lines up/down
+nnoremap <A-j> :m .+1<CR>==
+nnoremap <A-k> :m .-2<CR>==
+inoremap <A-j> <Esc>:m .+1<CR>==gi
+inoremap <A-k> <Esc>:m .-2<CR>==gi
+vnoremap <A-j> :m '>+1<CR>gv=gv
+vnoremap <A-k> :m '<-2<CR>gv=gv
+
+" Quick save and quit
+nnoremap <leader>w :write<CR>
+nnoremap <leader>q :quit<CR>
+nnoremap <leader>Q :qall<CR>
+
 " === Colorscheme ===
 colorscheme gruvbox
 set background=dark
+let g:gruvbox_contrast_dark = 'medium'
+let g:gruvbox_improved_strings = 1
+let g:gruvbox_improved_warnings = 1
 
 " === Python & C++ Specific Settings ===
 augroup filetype_settings
@@ -194,31 +320,53 @@ augroup filetype_settings
   autocmd FileType cpp,c setlocal tabstop=2 shiftwidth=2 expandtab
   autocmd FileType cpp,c setlocal cindent
   autocmd FileType cpp,c setlocal cinoptions=:0,l1,t0,g0,(0
-  " Ensure proper brace formatting
   autocmd FileType cpp,c setlocal formatoptions+=croql
+  
+  " Additional language settings
+  autocmd FileType javascript,typescript,json setlocal tabstop=2 shiftwidth=2 expandtab
+  autocmd FileType html,css,scss setlocal tabstop=2 shiftwidth=2 expandtab
+  autocmd FileType yaml setlocal tabstop=2 shiftwidth=2 expandtab
 augroup END
 
 " === C++ Specific Formatting Rules ===
-" Custom function for proper C++ brace formatting
 function! FixCppBraces()
-  " Fix opening braces
   silent! %s/\s*{\s*$/\r{/g
-  " Fix closing braces
   silent! %s/}\s*$/\r}/g
-  " Clean up extra newlines
   silent! %s/\n\n\+/\r\r/g
 endfunction
 
-" Command to fix C++ formatting
 command! FixCppFormat call FixCppBraces()
 
-" === Auto-format on save (optional - can be disabled) ===
-augroup format_on_save
+" === Performance Optimizations ===
+" Faster scrolling
+set scrolljump=5
+
+" Disable some features in large files
+augroup large_file_optimizations
   autocmd!
-  " Uncomment the next lines if you want auto-format on save
-  " autocmd BufWritePre *.cpp,*.c,*.h FormatCode
-  " autocmd BufWritePre *.py FormatCode
+  autocmd BufReadPre * if getfsize(expand("%")) > 1000000 | setlocal noswapfile | endif
 augroup END
+
+" === Auto Commands ===
+augroup misc_autocmds
+  autocmd!
+  " Return to last edit position when opening files
+  autocmd BufReadPost * if line("'\"") > 1 && line("'\"") <= line("$") | exe "normal! g'\"" | endif
+  
+  " Automatically close quickfix window if it's the only window left
+  autocmd WinEnter * if winnr('$') == 1 && &buftype == "quickfix" | q | endif
+  
+  " Auto-save when focus is lost
+  autocmd FocusLost * :wa
+  
+  " Highlight trailing whitespace
+  autocmd BufWinEnter * match ExtraWhitespace /\s\+$/
+  autocmd InsertEnter * match ExtraWhitespace /\s\+\%#\@<!$/
+  autocmd InsertLeave * match ExtraWhitespace /\s\+$/
+augroup END
+
+" Highlight extra whitespace
+highlight ExtraWhitespace ctermbg=red guibg=red
 
 " === Final Settings ===
 filetype plugin indent on
@@ -230,10 +378,8 @@ if empty(glob('~/.vim/plugged'))
 endif
 
 " === Additional phantom character fixes ===
-" Clear screen artifacts
 nnoremap <leader>r :redraw!<CR>
 
-" Fix terminal quirks
 if !has('nvim')
   set ttymouse=xterm2
 endif
