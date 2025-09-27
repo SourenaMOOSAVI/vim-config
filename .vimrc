@@ -138,8 +138,8 @@ function! SetupCodefmt()
   endif
 endfunction
 
-" Custom C++ formatting settings - Allman/BSD style
-let g:clang_format_fallback_style = '{ BasedOnStyle: LLVM, BreakBeforeBraces: Allman, IndentWidth: 2, ColumnLimit: 100 }'
+" Custom C++ formatting settings
+let g:clang_format_fallback_style = 'Google'
 
 " Manual formatting keybindings (work with or without codefmt)
 nnoremap <leader>f :call SmartFormat()<CR>
@@ -165,14 +165,6 @@ function! SmartFormatRange() range
 endfunction
 
 " === Key Mappings ===
-" System clipboard shortcuts
-nnoremap <leader>y "+y
-vnoremap <leader>y "+y
-nnoremap <leader>p "+p
-vnoremap <leader>p "+p
-nnoremap <leader>Y gg"+yG
-nnoremap <leader>P "+P
-
 " Commenting
 nmap <leader>/ gcc
 vmap <leader>/ gc
@@ -220,33 +212,13 @@ endfunction
 " Command to fix C++ formatting
 command! FixCppFormat call FixCppBraces()
 
-" === Auto-format on save ===
+" === Auto-format on save (optional - can be disabled) ===
 augroup format_on_save
   autocmd!
-  " Auto-format C/C++ and Python files on save
-  autocmd BufWritePre *.cpp,*.c,*.h call SmartFormat()
-  autocmd BufWritePre *.py call SmartFormat()
+  " Uncomment the next lines if you want auto-format on save
+  " autocmd BufWritePre *.cpp,*.c,*.h FormatCode
+  " autocmd BufWritePre *.py FormatCode
 augroup END
-
-" Toggle auto-format on save
-command! ToggleAutoFormat call ToggleAutoFormat()
-let g:auto_format_enabled = 1
-
-function! ToggleAutoFormat()
-  if g:auto_format_enabled
-    autocmd! format_on_save
-    let g:auto_format_enabled = 0
-    echo "Auto-format on save: DISABLED"
-  else
-    augroup format_on_save
-      autocmd!
-      autocmd BufWritePre *.cpp,*.c,*.h call SmartFormat()
-      autocmd BufWritePre *.py call SmartFormat()
-    augroup END
-    let g:auto_format_enabled = 1
-    echo "Auto-format on save: ENABLED"
-  endif
-endfunction
 
 " === Final Settings ===
 filetype plugin indent on
