@@ -202,6 +202,15 @@ vim test.cpp
 | `<CR>` | Accept Completion | Confirm selection |
 | `<C-Space>` | Trigger Completion | Force completion menu |
 
+#### Testing
+| Key | Action | Description |
+|-----|---------|-------------|
+| `<leader>t` | Test Nearest | Run nearest test |
+| `<leader>T` | Test File | Run tests in file |
+| `<leader>a` | Test Suite | Run all tests |
+| `<leader>lt` | Test Last | Re-run last test |
+| `<leader>gt` | Visit Test | Open test file |
+
 ### Advanced Features
 
 #### Enhanced Git Workflow
@@ -327,6 +336,15 @@ nnoremap <leader>t :terminal<CR>           " Open terminal
 nnoremap <F5> :w<CR>:!python %<CR>         " Run Python file
 nnoremap <leader>m :make<CR>               " Build project
 nnoremap <leader>e :Explore<CR>            " File explorer
+
+### Testing
+```vim
+<leader>t   # Test nearest
+<leader>T   # Test file
+<leader>a   # Test suite
+<leader>lt  # Test last
+<leader>gt  # Visit test file
+```
 ```
 
 ### Plugin Management
@@ -526,6 +544,8 @@ This project is licensed under the [GPL License](LICENSE) - see the LICENSE file
 - **[vim-sneak](https://github.com/justinmk/vim-sneak)**: Jump to any location specified by two characters
 - **[undotree](https://github.com/mbbill/undotree)**: Undo history visualizer
 - **[indentLine](https://github.com/Yggdroot/indentLine)**: Display indention levels
+- **[vim-test](https://github.com/vim-test/vim-test)**: Run tests seamlessly
+- **[vim-sleuth](https://github.com/tpope/vim-sleuth)**: Auto-detect indent settings
 
 ### Formatting & Language Support
 - **[Google](https://github.com/google)**: vim-codefmt, vim-maktaba, vim-glaive

@@ -7,7 +7,7 @@ set mouse=a                            " Enable mouse
 set encoding=utf-8 fileencoding=utf-8  " UTF-8 encoding
 set hidden                             " Allow hidden buffers
 set updatetime=100                     " Faster updates
-set timeoutlen=500                     " Shorter key sequence timeout
+" set timeoutlen=500                     " Shorter key sequence timeout (Disabled to avoid command issues)
 set termguicolors                      " Enable true colors
 set cursorline                         " Highlight current line
 set scrolloff=8                        " Keep lines above/below cursor
@@ -17,7 +17,7 @@ set noswapfile                         " Disable swap files
 set undofile undodir=~/.vim/undodir    " Persistent undo
 set signcolumn=yes                     " Always show sign column
 set splitbelow splitright              " Natural split behavior
-set lazyredraw                         " Don't redraw during macros
+" set lazyredraw                         " Don't redraw during macros (Disabled to fix UI lag)
 set ttyfast                            " Fast terminal connection
 set redrawtime=10000                   " Increase redraw timeout
 set wildmenu wildmode=longest:full,full " Better command completion
@@ -58,7 +58,12 @@ Plug 'tpope/vim-commentary'                               " Commenting
 Plug 'tpope/vim-surround'                                 " Surround text objects
 Plug 'tpope/vim-repeat'                                   " Repeat plugin commands
 Plug 'jiangmiao/auto-pairs'                               " Auto-close brackets
+
 Plug 'editorconfig/editorconfig-vim'                     " EditorConfig support
+
+" Testing & Detection
+Plug 'vim-test/vim-test'                                  " Run tests inside Vim
+Plug 'tpope/vim-sleuth'                                   " Auto-detect indent settings
 
 " Visual Enhancements
 Plug 'morhetz/gruvbox'                                    " Modern colorscheme
@@ -328,6 +333,18 @@ augroup filetype_settings
   autocmd FileType yaml setlocal tabstop=2 shiftwidth=2 expandtab
 augroup END
 
+" === Vim-Test Configuration ===
+let test#strategy = "vimterminal"
+if has('nvim')
+  let test#strategy = "neovim"
+endif
+
+nmap <silent> <leader>t :TestNearest<CR>
+nmap <silent> <leader>T :TestFile<CR>
+nmap <silent> <leader>a :TestSuite<CR>
+nmap <silent> <leader>lt :TestLast<CR>
+nmap <silent> <leader>gt :TestVisit<CR>
+
 " === C++ Specific Formatting Rules ===
 function! FixCppBraces()
   silent! %s/\s*{\s*$/\r{/g
@@ -381,7 +398,7 @@ endif
 nnoremap <leader>r :redraw!<CR>
 
 if !has('nvim')
-  set ttymouse=xterm2
+  set ttymouse=sgr
 endif
 
 " Prevent cursor shape issues
