@@ -99,7 +99,17 @@ ripgrep  # For content search
    vim +PlugInstall +qall
    ```
 
-5. **Install CoC extensions**
+   ```bash
+   vim +PlugInstall +qall
+   ```
+
+5. **Install Global Format Config (Recommended)**
+   Link the `.clang-format` file to your home directory to ensure consistent C++ formatting across all projects:
+   ```bash
+   ln -sf ~/vim-config/.clang-format ~/.clang-format
+   ```
+
+6. **Install CoC extensions**
    ```vim
    # Inside Vim:
    :CocInstall coc-clangd coc-pyright coc-json coc-snippets coc-pairs coc-git
@@ -114,6 +124,10 @@ which clang-format black autopep8
 
 # Open a test file
 vim test.cpp
+
+# Verify clang-format style
+# Inside vim: :verbose let g:clang_format_fallback_style
+# Should be 'Google' (but overridden by ~/.clang-format)
 ```
 
 ## 🎯 Usage Guide
