@@ -322,7 +322,7 @@ let g:gruvbox_improved_warnings = 1
 augroup filetype_settings
   autocmd!
   autocmd FileType python setlocal tabstop=4 shiftwidth=4 expandtab
-  autocmd FileType cpp,c setlocal tabstop=4 shiftwidth=4 expandtab
+  autocmd FileType cpp,c setlocal tabstop=2 shiftwidth=2 expandtab
   autocmd FileType cpp,c setlocal cindent
   autocmd FileType cpp,c setlocal cinoptions=:0,l1,t0,g0,(0
   autocmd FileType cpp,c setlocal formatoptions+=croql
