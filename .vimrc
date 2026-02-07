@@ -232,7 +232,7 @@ function! SetupCodefmt()
   endif
 endfunction
 
-let g:clang_format_fallback_style = '{BasedOnStyle: Google, IndentWidth: 4, BreakBeforeBraces: Allman, PointerAlignment: Left, SortIncludes: false, ColumnLimit: 100}'
+let g:clang_format_fallback_style = 'Google'
 
 " Manual formatting keybindings
 nnoremap <leader>f :call SmartFormat()<CR>

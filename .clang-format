@@ -1,0 +1,7 @@
+BasedOnStyle: Google
+IndentWidth: 4
+BreakBeforeBraces: Allman
+PointerAlignment: Left
+SortIncludes: false
+ColumnLimit: 100
+AccessModifierOffset: -4
