@@ -241,7 +241,10 @@ Uses Google's vim-codefmt with language-specific configurations:
 <leader>f
 
 # Language-specific formatting:
-# C/C++: clang-format with Google style
+# C/C++: clang-format with Google style (modified)
+# - Allman braces (on new line)
+# - 4 space indent
+# - Left pointer alignment
 # Python: autopep8 for PEP 8 compliance
 # Auto-detects and applies appropriate formatter
 ```
